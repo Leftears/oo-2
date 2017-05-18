@@ -1,0 +1,31 @@
+{
+  "name": "oo_project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "oo course project implement",
+  "author": "Li Boyuan",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "NODE_ENV=production node server/server",
+    "watch": "node_modules/.bin/babel-watch -w pages -w server --disable-autowatch server/server.js"
+  },
+  "dependencies": {
+    "body-parser": "~1.17.1",
+    "connect-flash": "^0.1.1",
+    "connect-redis": "^3.3.0",
+    "cookie-parser": "~1.4.3",
+    "express": "^4.15.2",
+    "express-session": "^1.15.2",
+    "mysql": "^2.13.0",
+    "next": "^2.3.1",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "react": "^15.5.4",
+    "react-addons-update": "^15.5.2",
+    "react-dom": "^15.5.4",
+    "semantic-ui-css": "^2.2.10",
+    "semantic-ui-react": "^0.68.3",
+    "sequelize": "^3.30.4"
+  }
+}
