@@ -32,9 +32,9 @@
 
 ## 系统展示
 
-![考务界面](/作业7/admin_preview.jpg)
+![考务界面](/作业7/admin_preview.png)
 
-![考生界面](/作业7/studengt_preview.jpg)
+![考生界面](/作业7/studengt_preview.png)
 
 ## 开发部署
 
