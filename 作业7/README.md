@@ -34,7 +34,7 @@
 
 ![考务界面](/作业7/admin_preview.png)
 
-![考生界面](/作业7/studengt_preview.png)
+![考生界面](/作业7/student_preview.png)
 
 ## 开发部署
 
