@@ -86,7 +86,7 @@ orm.sync({force: true}).then(() => {
         campus: '***大学', 
         description: '第三教学楼104', 
         capacity: 50, 
-        typeId: 3
+        typeId: 2
     }).then(succ, fail);
 
     ExamSpot.addExamSpot({

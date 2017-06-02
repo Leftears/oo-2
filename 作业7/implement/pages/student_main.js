@@ -62,6 +62,7 @@ export default class extends React.Component {
     }
 
     handleItemClick(e, {id}) {
+        if (id === -2 && !this.state.examTypes) this.syncExamTypes();
         this.setState({activeItem: id, toBeUpdated: {}});
     }
 
@@ -106,31 +107,67 @@ export default class extends React.Component {
         }, console.log);
     }
 
+    deleteEntryInfo(id) {
+        timeoutPromise(5000, '请求超时', fetch(`/entry_infos/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/json'}
+        })).then(res => {
+            if (res.ok) {
+                window.location.reload();
+            }
+        }, info => {});
+    }
+
+    syncExamTypes() {
+        timeoutPromise(5000, '请求超时', fetch(`/exam_types`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/json'}
+        })).then(res => {
+            res.json().then(res => {
+                this.setState({examTypes: res.examTypes});
+            }, console.log);
+        }, console.log);
+    }
+
     render() {
         const {entryInfos} = this.props;
-        const {activeItem, toBeUpdated, modalOpen, examSpots} = this.state;
+        const {activeItem, toBeUpdated, modalOpen, examSpots, examTypes} = this.state;
         let content = null;
         if (activeItem >= 0) {
             const info = entryInfos[activeItem];
             const scores = getScoreInfo(info);
-            const entryInfoAction = info.status === 'unsubmitted'
-                ? <Button.Group fluid>
-                        <Button positive
-                        onClick={() => {
-                            this.submitEntryInfo(info);
-                        }}>确认</Button>
+            const entryInfoAction = info.status === 'unsubmitted' ? 
+                <Button.Group fluid>
+                    <Button positive
+                    onClick={() => {
+                        this.submitEntryInfo(info);
+                    }}>确认</Button>
+                    <Button.Or/>
+                    <Button primary
+                    onClick={() => {
+                        this.setState({activeItem: -1, toBeUpdated: info});
+                    }}>修改</Button>
+                </Button.Group> : 
+                info.status === 'checked' ? 
+                    <Button.Group fluid>
+                        {
+                            !info.exam_spot ? 
+                                <Button primary onClick={() => {
+                                    this.setState({modalOpen: true});
+                                    this.getExamSpots(info.type_info.id);
+                                }}>选择考点</Button> : 
+                                <Button fluid primary >导出报名表</Button>
+                        }
                         <Button.Or/>
-                        <Button primary
-                        onClick={() => {
-                            this.setState({activeItem: -1, toBeUpdated: info});
-                        }}>修改</Button>
-                    </Button.Group>
-                : info.status === 'checked'
-                    ? !info.exam_spot ? <Button fluid primary onClick={() => {
-                        this.setState({modalOpen: true});
-                        this.getExamSpots(info.type_info.id);
-                    }}>选择考点</Button>
-                    : <Button fluid primary >导出报名表</Button> : null;
+                        <Button negative onClick={() => {
+                            this.deleteEntryInfo(info.id);
+                        }}>取消报名</Button>
+                    </Button.Group> : 
+                <Button fluid negative onClick={() => {
+                    this.deleteEntryInfo(info.id);
+                }}>取消报名</Button>;
             content = <Card fluid>
                 <Card.Content>
                     <Card.Header>
@@ -320,8 +357,31 @@ export default class extends React.Component {
                     </Table>
                 </Card.Content>
             </Card>;
-        } else {
+        } else if (activeItem === -1) {
             content = <EntryInfoForm {...toBeUpdated}/>
+        } else {
+            content = (
+                <Table compact celled selectable>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>ID</Table.HeaderCell>
+                            <Table.HeaderCell>名称</Table.HeaderCell>
+                            <Table.HeaderCell>报名开始时间</Table.HeaderCell>
+                            <Table.HeaderCell>报名截止时间</Table.HeaderCell>
+                            <Table.HeaderCell>考试科目</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {examTypes && examTypes.map(type => <Table.Row key={type.id}>
+                            <Table.Cell>{type.id}</Table.Cell>
+                            <Table.Cell>{type.name}</Table.Cell>
+                            <Table.Cell>{type.startFrom}</Table.Cell>
+                            <Table.Cell>{type.endAt}</Table.Cell>
+                            <Table.Cell>{type.subjects.reduce((a, b) => `${b.name} | ${a}`, '')}</Table.Cell>
+                        </Table.Row>)}                                
+                    </Table.Body>
+                </Table>
+            );
         }
         return (
             <div>
@@ -353,7 +413,12 @@ export default class extends React.Component {
                             onClick={this.handleItemClick}/>)}
                         <Menu.Menu position='right'>
                             <Menu.Item
-                                name='新建报名'
+                                name='查看全部报考类型'
+                                id={-2}
+                                active={activeItem === -2}
+                                onClick={this.handleItemClick}/>
+                            <Menu.Item
+                                name='新建或修改报名'
                                 id={-1}
                                 active={activeItem === -1}
                                 onClick={this.handleItemClick}/>

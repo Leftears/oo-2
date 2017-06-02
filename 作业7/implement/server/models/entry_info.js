@@ -9,19 +9,9 @@ exports.getEntryInfos = params => {
     const {status} = params;
     return new Promise((resolve, reject) => {
         EntryInfoSchema.findAll({
-            where: status === 'unchecked'
-                ? {
-                    status: 'unchecked'
-                }
-                : status === 'checked'
-                    ? {
-                        status: 'checked'
-                    }
-                    : {
-                        status: {
-                            $ne: 'unsubmitted'
-                        }
-                    },
+            where: status === 'unchecked' ? { status: 'unchecked' }
+                : status === 'checked' ? { status: 'checked' }
+                    : { status: { $ne: 'unsubmitted' } },
             include: [
                 {model: TypeInfoSchema, include: [SubjectSchema]},
                 ExamSpotSchema, 
@@ -47,11 +37,7 @@ exports.getEntryInfosByStudentId = studentId => {
 exports.checkEntryInfoById = id => {
     return new Promise((resolve, reject) => {
         EntryInfoSchema
-            .findOne({
-            where: {
-                id: id
-            }
-        })
+            .findOne({ where: { id: id } })
             .then(info => {
                 if (info.status != 'unchecked') 
                     return reject('非法的操作：无权确认该状态下的报考信息');
@@ -64,43 +50,19 @@ exports.checkEntryInfoById = id => {
 }
 
 exports.updateEntryInfoByStudentId = (studentId, params) => {
-    const {
-        name,
-        gender,
-        from,
-        graduatedFrom,
-        typeId,
-        submit,
-        examSpotId
-    } = params;
+    const { name, gender, from, graduatedFrom, typeId, submit, examSpotId } = params;
 
     return new Promise((resolve, reject) => {
         if (!typeId) 
             return reject('非法的操作：未指定报考类型');
         EntryInfoSchema
-            .findOne({
-            where: {
-                studentId: studentId,
-                typeId: typeId
-            }
-        })
+            .findOne({ where: { studentId: studentId, typeId: typeId } })
             .then(entryInfo => {
                 if (!entryInfo) {
-                    const e = {
-                        studentId,
-                        name,
-                        gender,
-                        from,
-                        graduatedFrom,
-                        typeId
-                    };
+                    const e = { studentId, name, gender, from, graduatedFrom, typeId };
                     EntryInfoSchema
                         .create(e)
-                        .then(info => {
-                            resolve(info);
-                        }, error => {
-                            reject(error);
-                        })
+                        .then(resolve, reject);
                 } else {
                     if (entryInfo.status == 'checked' && !entryInfo.examSpotId && examSpotId) {
                         entryInfo.examSpotId = examSpotId;
@@ -142,5 +104,22 @@ exports.getFullEntryInfosByStudentId = studentId => {
                 {model: ScoreSchema, include: [SubjectSchema]}
             ]
         }).then(resolve, reject);
+    });
+};
+
+exports.removeEntryInfoById = (id, studentId) => {
+    console.log('####', id, studentId);
+    return new Promise((resolve, reject) => {
+        EntryInfoSchema
+                .findOne({ where: { id: id } })
+                .then(entryInfo => {
+                    if (!entryInfo) {
+                        return reject('找不到该信息')
+                    } else if (entryInfo.studentId != studentId) {
+                        return reject('非法的操作：无权取消该报名信息')
+                    } else {
+                        return entryInfo.destroy({ force: true });
+                    }
+                }).then(resolve);
     });
 };

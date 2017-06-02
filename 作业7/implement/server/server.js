@@ -69,6 +69,16 @@ app.prepare().then(() => {
                 .send({message: error});
         };
 
+        server.get('/', (req, res) => {
+            if (!req.isAuthenticated()) {
+                res.redirect('/login');
+            } else if (req.user.authorization === 'student') {
+                res.redirect('/student_main');
+            } else {
+                res.redirect('/admin_main');
+            }
+        });
+
         /**
          * authentication
          */
@@ -116,6 +126,13 @@ app.prepare().then(() => {
         server.post('/entry_infos/:id', checkAuthentication('admin'), (req, res) => {
             EntryInfo.checkEntryInfoById(req.params.id).then(info => {
                 res.send({success: true, entryInfo: info});
+            }, handleError(res));
+        });
+
+        server.delete('/entry_infos/:id', checkAuthentication('student'), (req, res) => {
+            const {id} = req.user;
+            EntryInfo.removeEntryInfoById(req.params.id, id).then(() => {
+                res.send({success: true});
             }, handleError(res));
         });
 
